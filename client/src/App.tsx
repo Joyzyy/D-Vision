@@ -1,14 +1,12 @@
-import { useState } from "react";
-import { Button } from "@/components/ui/button";
+import RootLayout from "@/layout/Root";
+import AppRoutes from "@/routes/AppRoutes";
 
-function App() {
-  const [count, setCount] = useState(0);
-
+const App: React.FC = () => {
   return (
-    <>
-      <Button onClick={() => setCount(count + 1)}>{count}</Button>
-    </>
+    <RootLayout>
+      <AppRoutes />
+    </RootLayout>
   );
-}
+};
 
 export default App;
