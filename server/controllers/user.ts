@@ -2,7 +2,8 @@ import type { Request, Response } from "express";
 import type { PrismaClient, user, user_role } from "@prisma/client";
 import { Router } from "express";
 import { STATUS_CODES } from "../constants";
-import { checkJwt } from "../middlewares/auth";
+import { checkAuthorization } from "../middlewares/auth";
+import jwt from "jsonwebtoken";
 
 export { UserController };
 
@@ -21,7 +22,7 @@ class UserController {
    */
   initializeRoutes = (): void => {
     this.router.get("/", this.getUsers);
-    this.router.get("/:id", checkJwt, this.getUser);
+    this.router.get("/:id", checkAuthorization, this.getUser);
     this.router.get("/role/:role", this.getUsersByRole);
     this.router.post("/", this.createUser);
   };
@@ -121,8 +122,25 @@ class UserController {
       const user: user | null = await this.prisma.user.create({
         data,
       });
+
+      if (!user) {
+        throw new Error("User could not be created");
+      }
+
+      // if the user is created successfully, generate a jwt token
+      const token = jwt.sign(
+        {
+          id: user.id.toString(),
+          role: user.role,
+        },
+        process.env.JWT_SECRET as string,
+        {
+          expiresIn: "7d",
+        }
+      );
+
       res.status(STATUS_CODES.SUCCESS).json({
-        user,
+        token,
       });
     } catch (error: Error | any) {
       res.status(STATUS_CODES.INTERNAL_SERVER_ERROR).json({

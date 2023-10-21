@@ -1,9 +1,8 @@
 import type { Request, Response, NextFunction } from "express";
-import type { user } from "@prisma/client";
 import jwt from "jsonwebtoken";
 import { STATUS_CODES } from "../constants";
 
-export const checkJwt = (
+export const checkAuthorization = (
   req: Request,
   res: Response,
   next: NextFunction
@@ -21,6 +20,13 @@ export const checkJwt = (
       res.status(STATUS_CODES.UNAUTHORIZED).send({ message: "Unauthorized" });
       return;
     }
+
+    const { id, role } = payload as { id: string; role: string };
+    if (req.params.id && id !== req.params.id && role === "participant") {
+      res.status(STATUS_CODES.UNAUTHORIZED).send({ message: "Unauthorized" });
+      return;
+    }
+
     next();
   });
 };
