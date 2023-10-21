@@ -7,12 +7,75 @@ datasource db {
   url      = env("DATABASE_URL")
 }
 
-/// This table contains check constraints and requires additional setup for migrations. Visit https://pris.ly/d/check-constraints for more info.
-model users {
-  id        Int       @id @default(autoincrement())
-  username  String    @unique(map: "username") @db.VarChar(50)
-  password  String    @db.VarChar(255)
-  email     String    @unique(map: "email") @db.VarChar(255)
-  createdAt DateTime? @default(now()) @db.Timestamp(0)
-  updatedAt DateTime? @default(now()) @db.Timestamp(0)
+model attendance {
+  id              Int      @id @default(autoincrement())
+  event_id        Int
+  participant_id  Int
+  attendence_time DateTime @db.DateTime(0)
+  event           event    @relation(fields: [event_id], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "attendance_ibfk_1")
+  user            user     @relation(fields: [participant_id], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "attendance_ibfk_2")
+
+  @@index([event_id], map: "event_id")
+  @@index([participant_id], map: "participant_id")
+}
+
+model event {
+  id                Int                    @id @default(autoincrement())
+  name              String                 @db.VarChar(255)
+  start_time        DateTime               @db.DateTime(0)
+  end_time          DateTime               @db.DateTime(0)
+  access_code       String                 @db.VarChar(255)
+  access_code_type  event_access_code_type
+  state             event_state
+  attendance        attendance[]
+  event_group_event event_group_event[]
+}
+
+model event_group {
+  id                Int                 @id @default(autoincrement())
+  name              String              @db.VarChar(255)
+  start_time        DateTime            @db.DateTime(0)
+  end_time          DateTime            @db.DateTime(0)
+  state             event_group_state
+  event_group_event event_group_event[]
+}
+
+model event_group_event {
+  id             Int         @id @default(autoincrement())
+  event_id       Int
+  event_group_id Int
+  event          event       @relation(fields: [event_id], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "event_group_event_ibfk_1")
+  event_group    event_group @relation(fields: [event_group_id], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "event_group_event_ibfk_2")
+
+  @@index([event_group_id], map: "event_group_id")
+  @@index([event_id], map: "event_id")
+}
+
+model user {
+  id         Int          @id @default(autoincrement())
+  name       String       @db.VarChar(255)
+  role       user_role
+  email      String       @db.VarChar(255)
+  attendance attendance[]
+}
+
+enum user_role {
+  participant
+  event_organizer @map("event organizer")
+}
+
+enum event_group_state {
+  OPEN
+  CLOSED
+}
+
+enum event_access_code_type {
+  text
+  QR
+  both
+}
+
+enum event_state {
+  OPEN
+  CLOSED
 }
