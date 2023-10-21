@@ -1,9 +1,3 @@
-<style>
-  warning {
-    color: #f0ad4e;
-  }
-</style>
-
 # D/VISION Server
 
 This is the server for the **attendance app**.
@@ -23,7 +17,7 @@ DATABASE_URL="mysql://USER:PASSWORD@HOST/DB_NAME"
 
 Replace `USER`, `PASSWORD`, `HOST`, and `DB_NAME` with the appropriate values for your database provider.
 
-##### <warning>WARNING: If you're not using MySQL as your database provider, you will need to change the `prisma/schema.prisma` file to match your database provider.</warning>
+**WARNING: If you're not using MySQL as your database provider, you will need to change the `prisma/schema.prisma` file to match your database provider.**
 
 Example if you're using PostgreSQL:
 
@@ -46,6 +40,12 @@ To install the dependencies, run the following command from the root directory o
 
 ```bash
 npm install
+```
+
+You will also need to install ts-node globally:
+
+```bash
+npm install -g ts-node
 ```
 
 #### Usage
