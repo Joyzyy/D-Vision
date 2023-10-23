@@ -1,5 +1,5 @@
 import type { Request, Response } from "express";
-import type { PrismaClient, event } from "@prisma/client";
+import type { PrismaClient, event, event_state } from "@prisma/client";
 import { Router } from "express";
 import { STATUS_CODES } from "../constants";
 
@@ -20,7 +20,7 @@ class EventController {
    */
   initializeRouter = (): void => {
     this.router.get("/", this.getEvents);
-    this.router.get("/:id", this.getEvent);
+    this.router.get("/:accessCode", this.getEvent);
     this.router.post("/", this.createEvent);
   };
 
@@ -59,15 +59,13 @@ class EventController {
    */
   getEvent = async (req: Request, res: Response): Promise<void> => {
     try {
-      const { id } = req.params;
-      const event = await this.prisma.event.findUnique({
+      const { accessCode } = req.params;
+      const event = await this.prisma.event.findFirst({
         where: {
-          id: Number(id),
+          access_code: accessCode,
         },
       });
-      res.status(STATUS_CODES.SUCCESS).json({
-        data: event,
-      });
+      res.status(STATUS_CODES.SUCCESS).json(event);
     } catch (error: Error | any) {
       res.status(STATUS_CODES.INTERNAL_SERVER_ERROR).json({
         error: error.message,
@@ -87,9 +85,16 @@ class EventController {
    */
   createEvent = async (req: Request, res: Response): Promise<void> => {
     try {
-      const data: event = req.body;
+      const data: Omit<event, "start_time" | "end_time"> & {
+        start_time: string;
+        end_time: string;
+      } = req.body;
       const newEvent = await this.prisma.event.create({
-        data,
+        data: {
+          ...data,
+          start_time: new Date(data.start_time),
+          end_time: new Date(data.end_time),
+        },
       });
       res.status(STATUS_CODES.CREATED).json({
         data: newEvent,

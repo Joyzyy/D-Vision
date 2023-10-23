@@ -1,6 +1,7 @@
 import { FC, LazyExoticComponent, lazy, Suspense } from "react";
 import { Routes, Route } from "react-router-dom";
 import { pages } from "@/constants";
+import LoadingScreen from "@/pages/Loading";
 
 const Home: LazyExoticComponent<FC> = lazy(() => import("@/pages/Home"));
 
@@ -14,7 +15,7 @@ export default function AppRoutes() {
       <Route
         path={pages.home}
         element={
-          <Suspense fallback={<p>Loading...</p>}>
+          <Suspense fallback={<LoadingScreen />}>
             <Home />
           </Suspense>
         }
@@ -22,7 +23,7 @@ export default function AppRoutes() {
       <Route
         path={"*"}
         element={
-          <Suspense fallback={<p>Loading...</p>}>
+          <Suspense fallback={<LoadingScreen />}>
             <NotFound />
           </Suspense>
         }
