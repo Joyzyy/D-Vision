@@ -97,6 +97,7 @@ npm run dev
 |                   | name             | Name of the user                                                     |
 |                   | role             | Role of the user. Could be either 'participant' or 'event ogranizer' |
 |                   | email            | Email address of the user                                            |
+|                   | password         | Password of the user                                                 |
 | attendance        | id               | Unique identifier for the attendance record                          |
 |                   | event_id         | Foreign key to the event table or to the event group table           |
 |                   | participant_id   | Foreign key to the user table                                        |

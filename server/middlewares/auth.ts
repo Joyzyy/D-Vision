@@ -2,8 +2,12 @@ import type { Request, Response, NextFunction } from "express";
 import jwt from "jsonwebtoken";
 import { STATUS_CODES } from "../constants";
 
+interface ExtendedRequest extends Request {
+  userId?: number;
+}
+
 export const checkAuthorization = (
-  req: Request,
+  req: ExtendedRequest,
   res: Response,
   next: NextFunction
 ): void => {
@@ -21,11 +25,7 @@ export const checkAuthorization = (
       return;
     }
 
-    const { id, role } = payload as { id: string; role: string };
-    if (req.params.id && id !== req.params.id && role === "participant") {
-      res.status(STATUS_CODES.UNAUTHORIZED).send({ message: "Unauthorized" });
-      return;
-    }
+    req.userId = (payload as { id: number }).id;
 
     next();
   });

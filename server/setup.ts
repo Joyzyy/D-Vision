@@ -12,6 +12,9 @@ const setup = async (app: Application) => {
 
   app.use("/events", eventController.router);
   app.use("/users", userController.router);
+
+  // for testing purposes
+  app.get("/ping", (_, res) => res.status(200));
 };
 
 export { setup };
