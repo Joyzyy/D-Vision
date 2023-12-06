@@ -1,7 +1,10 @@
-import { FC, LazyExoticComponent, lazy, Suspense } from "react";
+import { FC, LazyExoticComponent, lazy, Suspense, useState } from "react";
 import { Routes, Route } from "react-router-dom";
 import { pages } from "@/constants";
 import LoadingScreen from "@/pages/Loading";
+import { user_signal } from "@/lib/signals";
+import { useEffect } from "react";
+import { SERVER_URL } from "@/constants";
 
 const Home: LazyExoticComponent<FC> = lazy(() => import("@/pages/Home"));
 const DashboardHome: LazyExoticComponent<FC> = lazy(
@@ -18,6 +21,21 @@ const NotFound: LazyExoticComponent<FC> = lazy(
 );
 
 export default function AppRoutes() {
+  useEffect(() => {
+    if (localStorage.getItem("token")) {
+      fetch(`${SERVER_URL}/users/current`, {
+        headers: {
+          Authorization: `Bearer ${localStorage.getItem("token")}`,
+        },
+      })
+        .then((res) => res.json())
+        .then((data) => {
+          user_signal.value = data.user;
+          console.log(user_signal.value);
+        });
+    }
+  }, []);
+
   return (
     <Routes>
       <Route

@@ -27,6 +27,8 @@ import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { SERVER_URL } from "@/constants";
 import * as z from "zod";
+import { useNavigate } from "react-router-dom";
+import { user_signal } from "@/lib/signals";
 
 const eventOrganizerSchema = z.object({
   email: z
@@ -142,6 +144,7 @@ const LoginTab: FC = () => {
 const SignupTab: FC = () => {
   const [error, setError] = useState<string>("");
   const [showPassword, setShowPassword] = useState<boolean>(false);
+  const navigate = useNavigate();
 
   const form = useForm<z.infer<typeof createEventOrganizerSchema>>({
     resolver: zodResolver(createEventOrganizerSchema),
@@ -167,11 +170,21 @@ const SignupTab: FC = () => {
       }),
     })
       .then((response) => response.json())
-      .then((data: { token: string }) => {
-        if (!data) setError("A aparut o eroare la serverele noastre!");
-        localStorage.setItem("token", data.token);
-        window.location.href = "/dashboard";
-      })
+      .then(
+        (data: {
+          user: {
+            name: string;
+            email: string;
+            role: "participant" | "event_organizer";
+          };
+          token: string;
+        }) => {
+          if (!data) setError("A aparut o eroare la serverele noastre!");
+          localStorage.setItem("token", data.token);
+          user_signal.value = data.user;
+          navigate("/dashboard", { replace: true });
+        }
+      )
       .catch((_) => null);
   };
 

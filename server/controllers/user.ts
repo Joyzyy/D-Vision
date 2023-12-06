@@ -247,6 +247,11 @@ class UserController {
       );
 
       res.status(STATUS_CODES.SUCCESS).json({
+        user: {
+          name: user.name,
+          email: user.email,
+          role: user.role,
+        },
         token,
       });
     } catch (error: Error | any) {
