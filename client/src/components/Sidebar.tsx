@@ -1,10 +1,11 @@
 import { ArrowLeftIcon } from "@radix-ui/react-icons";
-import { cn, isTablet, isMobile } from "@/lib/utils";
+import { cn } from "@/lib/utils";
 import { useEffect, useState } from "react";
 import { Link, useLocation } from "react-router-dom";
 import { SIDEBAR_LINKS } from "@/constants";
 import { Button } from "./ui/button";
-import { user_signal } from "@/lib/signals";
+import { user_atom } from "@/lib/atoms";
+import { useAtom } from "jotai";
 
 // extend the sidebar links with the icons
 const sidebarLinks = SIDEBAR_LINKS.map((val) => {
@@ -75,13 +76,13 @@ const sidebarLinks = SIDEBAR_LINKS.map((val) => {
 });
 
 export function Sidebar() {
+  const [user, setUser] = useAtom(user_atom);
   const [current, setCurrent] = useState({});
   const [sidebarOpen, setSidebarOpen] = useState<boolean>(false);
   const location = useLocation();
 
   useEffect(() => {
     setCurrent(location.pathname);
-    if (isMobile() || isTablet()) setSidebarOpen(true);
   }, [location]);
 
   return (
@@ -140,11 +141,11 @@ export function Sidebar() {
             variant="ghost"
             onClick={() => {
               console.log("changed the user value!");
-              user_signal.value = {
+              setUser({
                 name: "sadsad",
                 email: "asdasd",
                 role: "participant",
-              };
+              });
             }}
           >
             <svg
@@ -161,9 +162,9 @@ export function Sidebar() {
                 clipRule="evenodd"
               ></path>
             </svg>
-            {!sidebarOpen && user_signal.value && (
+            {!sidebarOpen && user && (
               <span className="w-full h-[20px] overflow-hidden mt-[2px]">
-                {user_signal.value.name}
+                {user.name}
               </span>
             )}
           </Button>

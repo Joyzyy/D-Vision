@@ -28,7 +28,14 @@ import { Button } from "@/components/ui/button";
 import { SERVER_URL } from "@/constants";
 import * as z from "zod";
 import { useNavigate } from "react-router-dom";
-import { user_signal } from "@/lib/signals";
+import { user } from "@/models/user";
+import { user_atom } from "@/lib/atoms";
+import { useAtom } from "jotai";
+
+type TUserResponseData = {
+  user: Omit<user, "id" | "password">;
+  token: string;
+};
 
 const eventOrganizerSchema = z.object({
   email: z
@@ -50,8 +57,10 @@ const createEventOrganizerSchema = eventOrganizerSchema.and(
 );
 
 const LoginTab: FC = () => {
+  const [_, setUser] = useAtom(user_atom);
   const [showPassword, setShowPassword] = useState<boolean>(false);
   const [error, setError] = useState<string>("");
+  const navigate = useNavigate();
 
   const form = useForm<z.infer<typeof eventOrganizerSchema>>({
     resolver: zodResolver(eventOrganizerSchema),
@@ -73,13 +82,18 @@ const LoginTab: FC = () => {
         password: values.password,
       }),
     })
-      .then((response) => response.json())
-      .then((data) => {
-        if (!data.token) setError("A aparut o eroare la serverele noastre!");
-        localStorage.setItem("token", data.token);
-        window.location.href = "/dashboard";
+      .then((response) => {
+        if (response.ok) return response.json();
+        else throw new Error("Email/parola gresita");
       })
-      .catch((_) => {});
+      .then((data: TUserResponseData) => {
+        if (!data.token)
+          throw new Error("A aparut o eroare la serverele noastre!");
+        localStorage.setItem("token", data.token);
+        setUser(data.user);
+        navigate("/dashboard", { replace: true });
+      })
+      .catch((err: Error) => setError(err.message));
   };
 
   return (
@@ -142,6 +156,7 @@ const LoginTab: FC = () => {
 };
 
 const SignupTab: FC = () => {
+  const [_, setUser] = useAtom(user_atom);
   const [error, setError] = useState<string>("");
   const [showPassword, setShowPassword] = useState<boolean>(false);
   const navigate = useNavigate();
@@ -169,23 +184,17 @@ const SignupTab: FC = () => {
         password: values.password,
       }),
     })
-      .then((response) => response.json())
-      .then(
-        (data: {
-          user: {
-            name: string;
-            email: string;
-            role: "participant" | "event_organizer";
-          };
-          token: string;
-        }) => {
-          if (!data) setError("A aparut o eroare la serverele noastre!");
-          localStorage.setItem("token", data.token);
-          user_signal.value = data.user;
-          navigate("/dashboard", { replace: true });
-        }
-      )
-      .catch((_) => null);
+      .then((response) => {
+        if (response.ok) return response.json();
+        else throw new Error("A aparut o eroare la serverele noastre!");
+      })
+      .then((data: TUserResponseData) => {
+        if (!data) setError("A aparut o eroare la serverele noastre!");
+        localStorage.setItem("token", data.token);
+        setUser(data.user);
+        navigate("/dashboard", { replace: true });
+      })
+      .catch((err: Error) => setError(err.message));
   };
 
   return (

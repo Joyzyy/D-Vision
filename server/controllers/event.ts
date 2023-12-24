@@ -65,6 +65,8 @@ class EventController {
           access_code: accessCode,
         },
       });
+      if (!event)
+        res.status(STATUS_CODES.NOT_FOUND).json({ error: "Event not found." });
       res.status(STATUS_CODES.SUCCESS).json(event);
     } catch (error: Error | any) {
       res.status(STATUS_CODES.INTERNAL_SERVER_ERROR).json({

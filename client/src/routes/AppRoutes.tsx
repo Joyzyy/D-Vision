@@ -1,10 +1,12 @@
-import { FC, LazyExoticComponent, lazy, Suspense, useState } from "react";
+import { FC, LazyExoticComponent, lazy, Suspense } from "react";
 import { Routes, Route } from "react-router-dom";
 import { pages } from "@/constants";
 import LoadingScreen from "@/pages/Loading";
 import { user_signal } from "@/lib/signals";
 import { useEffect } from "react";
 import { SERVER_URL } from "@/constants";
+import { useAtom } from "jotai";
+import { user_atom } from "@/lib/atoms";
 
 const Home: LazyExoticComponent<FC> = lazy(() => import("@/pages/Home"));
 const DashboardHome: LazyExoticComponent<FC> = lazy(
@@ -21,6 +23,7 @@ const NotFound: LazyExoticComponent<FC> = lazy(
 );
 
 export default function AppRoutes() {
+  const [user, setUser] = useAtom(user_atom);
   useEffect(() => {
     if (localStorage.getItem("token")) {
       fetch(`${SERVER_URL}/users/current`, {
@@ -28,11 +31,17 @@ export default function AppRoutes() {
           Authorization: `Bearer ${localStorage.getItem("token")}`,
         },
       })
-        .then((res) => res.json())
+        .then((res) => {
+          if (res.ok) return res.json();
+          else throw new Error("A aparut o eroare la serverele noastre!");
+        })
         .then((data) => {
-          user_signal.value = data.user;
-          console.log(user_signal.value);
-        });
+          if (!user) {
+            setUser(data.user);
+            console.log("updated the user signal!");
+          }
+        })
+        .catch((err: Error) => console.log(err.message));
     }
   }, []);
 

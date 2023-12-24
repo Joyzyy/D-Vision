@@ -1,18 +1,22 @@
 import { Sidebar } from "../Sidebar";
 import { useNavigate } from "react-router-dom";
 import { useEffect } from "react";
-import { user_signal } from "@/lib/signals";
+import { user_atom } from "@/lib/atoms";
+import { useAtom } from "jotai";
 
 type DashboardLayoutProps = {
   children?: React.ReactNode;
 };
 
 const DashboardLayout: React.FC<DashboardLayoutProps> = ({ children }) => {
+  const [_, setUser] = useAtom(user_atom);
   const navigate = useNavigate();
 
   useEffect(() => {
-    if (!(localStorage.getItem("token") && user_signal.value))
+    if (!localStorage.getItem("token")) {
+      setUser(null);
       navigate("/", { replace: true });
+    }
   }, []);
 
   return (

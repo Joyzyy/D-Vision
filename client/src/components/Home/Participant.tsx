@@ -42,6 +42,11 @@ import { Cross2Icon } from "@radix-ui/react-icons";
 import { event } from "@/models/event";
 import { SERVER_URL } from "@/constants";
 
+type TEventResponseData = {
+  event?: event;
+  error?: string;
+};
+
 const createUserSchema = z.object({
   name: z
     .string()
@@ -71,22 +76,18 @@ const CreateUserComponent: FC<{ accessCode: string }> = (props) => {
 
   const handleClick = () => {
     fetch(`${SERVER_URL}/events/${accessCode}`)
-      .then((response) => response.json())
-      .then((data: event) => {
-        setEventData(data);
-        if (!data) {
-          toast({
-            title: "Eroare",
-            description: "Codul de access nu este valid",
-            variant: "destructive",
-          });
-          return;
-        }
+      .then(async (response) => {
+        const data: TEventResponseData = await response.json();
+        if (response.ok) return data;
+        else throw new Error("A aparut o eroare la serverele noastre!");
+      })
+      .then((data: TEventResponseData | undefined) => {
+        setEventData(data?.event);
         setIsOpen(!isOpen);
       })
-      .catch((_) => {
+      .catch((err: Error) => {
         toast({
-          description: "A aparut o eroare",
+          description: err.message,
           variant: "destructive",
         });
       });
