@@ -2,21 +2,17 @@ import { FC, LazyExoticComponent, lazy, Suspense } from "react";
 import { Routes, Route } from "react-router-dom";
 import { pages } from "@/constants";
 import LoadingScreen from "@/pages/Loading";
-import { user_signal } from "@/lib/signals";
 import { useEffect } from "react";
 import { SERVER_URL } from "@/constants";
 import { useAtom } from "jotai";
 import { user_atom } from "@/lib/atoms";
 
-const Home: LazyExoticComponent<FC> = lazy(() => import("@/pages/Home"));
+const Portal: LazyExoticComponent<FC> = lazy(() => import("@/pages/Portal"));
 const DashboardHome: LazyExoticComponent<FC> = lazy(
   () => import("@/pages/Dashboard/Overview")
 );
 const DashboardEvents: LazyExoticComponent<FC> = lazy(
   () => import("@/pages/Dashboard/Events")
-);
-const DashboardSettings: LazyExoticComponent<FC> = lazy(
-  () => import("@/pages/Dashboard/Settings")
 );
 const NotFound: LazyExoticComponent<FC> = lazy(
   () => import("@/pages/NotFound")
@@ -51,7 +47,7 @@ export default function AppRoutes() {
         path={pages.home}
         element={
           <Suspense fallback={<LoadingScreen />}>
-            <Home />
+            <Portal />
           </Suspense>
         }
       />
@@ -68,14 +64,6 @@ export default function AppRoutes() {
         element={
           <Suspense fallback={<LoadingScreen />}>
             <DashboardEvents />
-          </Suspense>
-        }
-      />
-      <Route
-        path={pages.dashboard.me}
-        element={
-          <Suspense fallback={<LoadingScreen />}>
-            <DashboardSettings />
           </Suspense>
         }
       />

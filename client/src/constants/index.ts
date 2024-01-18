@@ -10,7 +10,7 @@ const pages = {
 // const SERVER_URL = "http://206.189.53.60";
 const SERVER_URL = "http://localhost:3000";
 
-const SIDEBAR_LINKS: {
+const NAVBAR_LINKS: {
   title: string;
   href: string;
   icon?: any;
@@ -20,13 +20,9 @@ const SIDEBAR_LINKS: {
     href: pages.dashboard.index,
   },
   {
-    title: "Events",
+    title: "Event groups",
     href: pages.dashboard.events,
-  },
-  {
-    title: "Settings",
-    href: pages.dashboard.me,
   },
 ];
 
-export { pages, SERVER_URL, SIDEBAR_LINKS };
+export { pages, SERVER_URL, NAVBAR_LINKS };

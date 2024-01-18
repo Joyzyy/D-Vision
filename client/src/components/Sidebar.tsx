@@ -7,7 +7,6 @@ import { Button } from "./ui/button";
 import { user_atom } from "@/lib/atoms";
 import { useAtom } from "jotai";
 
-// extend the sidebar links with the icons
 const sidebarLinks = SIDEBAR_LINKS.map((val) => {
   switch (val.href) {
     case "/dashboard":
@@ -76,7 +75,7 @@ const sidebarLinks = SIDEBAR_LINKS.map((val) => {
 });
 
 export function Sidebar() {
-  const [user, setUser] = useAtom(user_atom);
+  const [user, _] = useAtom(user_atom);
   const [current, setCurrent] = useState({});
   const [sidebarOpen, setSidebarOpen] = useState<boolean>(false);
   const location = useLocation();
@@ -139,14 +138,6 @@ export function Sidebar() {
               "w-full h-[60px] flex flex-row items-center gap-[8px] text-[15px] leading-[20px] py-[10px] uppercase text-left"
             )}
             variant="ghost"
-            onClick={() => {
-              console.log("changed the user value!");
-              setUser({
-                name: "sadsad",
-                email: "asdasd",
-                role: "participant",
-              });
-            }}
           >
             <svg
               width="15"

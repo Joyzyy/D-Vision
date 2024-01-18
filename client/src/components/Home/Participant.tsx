@@ -1,4 +1,4 @@
-import { FC, useState } from "react";
+import { FC, useEffect, useState } from "react";
 import { Button } from "@/components/ui/button";
 import {
   Card,
@@ -41,6 +41,7 @@ import { useForm } from "react-hook-form";
 import { Cross2Icon } from "@radix-ui/react-icons";
 import { event } from "@/models/event";
 import { SERVER_URL } from "@/constants";
+import { useLocation, useNavigate, useParams } from "react-router-dom";
 
 type TEventResponseData = {
   event?: event;
@@ -75,15 +76,20 @@ const CreateUserComponent: FC<{ accessCode: string }> = (props) => {
   });
 
   const handleClick = () => {
-    fetch(`${SERVER_URL}/events/${accessCode}`)
-      .then(async (response) => {
-        const data: TEventResponseData = await response.json();
-        if (response.ok) return data;
-        else throw new Error("A aparut o eroare la serverele noastre!");
-      })
-      .then((data: TEventResponseData | undefined) => {
-        setEventData(data?.event);
-        setIsOpen(!isOpen);
+    fetch(`${SERVER_URL}/users/${accessCode}`)
+      .then((res) => res.json())
+      .then((data: any) => {
+        if (data.message) {
+          toast({
+            title: "Eroare",
+            description: data.message,
+            variant: "destructive",
+          });
+          return;
+        } else {
+          setEventData(data);
+          setIsOpen(!isOpen);
+        }
       })
       .catch((err: Error) => {
         toast({
@@ -93,8 +99,40 @@ const CreateUserComponent: FC<{ accessCode: string }> = (props) => {
       });
   };
 
-  const handleCreateUser = () => {
-    console.log(form.getValues());
+  const handleCreateUser = (data: z.infer<typeof createUserSchema>) => {
+    fetch(`${SERVER_URL}/users/attend`, {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify({
+        event_id: eventData?.id,
+        ...data,
+      }),
+    })
+      .then((res) => res.json())
+      .then((data: any) => {
+        if (data) {
+          if (data.message) {
+            toast({
+              title: "Eroare",
+              description: data.message,
+              variant: "destructive",
+            });
+            return;
+          } else {
+            toast({
+              title: "Succes",
+              description:
+                "Te-ai inscris cu succes la evenimentul " +
+                eventData?.name +
+                "!\n Timpul la care ati fost inscris este " +
+                new Date(data.attendance.attendence_time).toLocaleTimeString(),
+            });
+          }
+        }
+      })
+      .catch((err) => console.error(err));
     setIsOpen(!isOpen);
   };
 
@@ -202,6 +240,14 @@ const CreateUserComponent: FC<{ accessCode: string }> = (props) => {
 
 const ParticipantComponent: FC = () => {
   const [accessCode, setAccessCode] = useState<string>("");
+  const location = useLocation();
+  const queryParams = new URLSearchParams(location.search);
+
+  useEffect(() => {
+    if (queryParams.get("accessCode")) {
+      setAccessCode(queryParams.get("accessCode") as string);
+    }
+  }, []);
 
   return (
     <Card>
@@ -217,6 +263,7 @@ const ParticipantComponent: FC = () => {
           id="textCode"
           placeholder="Introdu codul"
           type="text"
+          value={accessCode}
           onInput={(e) => setAccessCode(e.currentTarget.value)}
         />
         <CreateUserComponent accessCode={accessCode} />

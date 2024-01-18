@@ -2,7 +2,7 @@ import type { Request, Response } from "express";
 import type { PrismaClient, user, user_role } from "@prisma/client";
 import { Router } from "express";
 import { STATUS_CODES } from "../constants";
-import { checkAuthorization } from "../middlewares/auth";
+import { checkAuthorizationMiddleware } from "../middlewares/auth";
 import jwt from "jsonwebtoken";
 import bcrypt from "bcrypt";
 
@@ -27,10 +27,16 @@ class UserController {
    */
   initializeRoutes = (): void => {
     this.router.get("/", this.getUsers);
-    this.router.get("/current", checkAuthorization, this.getCurrentUser);
+    this.router.get(
+      "/current",
+      checkAuthorizationMiddleware,
+      this.getCurrentUser
+    );
     this.router.get("/role/:role", this.getUsersByRole);
+    this.router.get("/:accessCode", this.getEventByAccessCode);
     this.router.post("/create", this.createUser);
     this.router.post("/login", this.loginUser);
+    this.router.post("/attend", this.attendEvent);
   };
 
   /**
@@ -78,6 +84,25 @@ class UserController {
         users,
       });
     } catch (error: Error | any) {
+      res.status(STATUS_CODES.INTERNAL_SERVER_ERROR).json({
+        message: error.message,
+      });
+    }
+  };
+
+  getEventByAccessCode = async (req: Request, res: Response): Promise<void> => {
+    try {
+      const { accessCode } = req.params;
+      const event = await this.prisma.event.findFirst({
+        where: {
+          access_code: accessCode,
+        },
+      });
+      console.log("event: ", event);
+      if (!event) throw new Error("Event not found.");
+      console.log(event);
+      res.status(STATUS_CODES.SUCCESS).json(event);
+    } catch (error: any) {
       res.status(STATUS_CODES.INTERNAL_SERVER_ERROR).json({
         message: error.message,
       });
@@ -256,6 +281,68 @@ class UserController {
       });
     } catch (error: Error | any) {
       res.status(STATUS_CODES.BAD_REQUEST).json({
+        message: error.message,
+      });
+    }
+  };
+
+  attendEvent = async (req: Request, res: Response): Promise<void> => {
+    try {
+      const data: user & {
+        event_id: number;
+      } = req.body;
+
+      // get the event
+      const event = await this.prisma.event.findFirst({
+        where: {
+          id: data.event_id,
+        },
+      });
+      if (!event) throw new Error("Event not found.");
+      if (event && event.state === "CLOSED")
+        throw new Error("Event is closed.");
+
+      // first check if the user exists
+      let newUser = null;
+      const user = await this.prisma.user.findFirst({
+        where: {
+          email: data.email,
+        },
+      });
+      if (!user) {
+        newUser = await this.prisma.user.create({
+          data: {
+            name: data.name,
+            email: data.email,
+            role: "participant",
+          },
+        });
+        if (!newUser) throw new Error("There was an error creating the user.");
+      }
+
+      // check if the user has already attended the event
+      const attendanceCheck = await this.prisma.attendance.findFirst({
+        where: {
+          participant_id: user ? user.id : ((newUser && newUser.id) as number),
+          event_id: data.event_id,
+        },
+      });
+      if (attendanceCheck)
+        throw new Error("User has already attended the event.");
+      const attendance = await this.prisma.attendance.create({
+        data: {
+          event_id: data.event_id,
+          participant_id: user ? user.id : ((newUser && newUser.id) as number),
+          attendence_time: new Date(),
+        },
+      });
+      if (!attendance)
+        throw new Error("There was an error creating the attendance.");
+      res.status(STATUS_CODES.SUCCESS).json({
+        attendance,
+      });
+    } catch (error: any) {
+      res.status(STATUS_CODES.INTERNAL_SERVER_ERROR).json({
         message: error.message,
       });
     }

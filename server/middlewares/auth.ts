@@ -1,12 +1,9 @@
-import type { Request, Response, NextFunction } from "express";
+import type { Response, NextFunction } from "express";
+import type { ExtendedRequest } from "../constants/types";
 import jwt from "jsonwebtoken";
 import { STATUS_CODES } from "../constants";
 
-interface ExtendedRequest extends Request {
-  userId?: number;
-}
-
-export const checkAuthorization = (
+export const checkAuthorizationMiddleware = (
   req: ExtendedRequest,
   res: Response,
   next: NextFunction
@@ -25,7 +22,8 @@ export const checkAuthorization = (
       return;
     }
 
-    req.userId = (payload as { id: number }).id;
+    req.userId = (payload as { id: number; role: string }).id;
+    req.role = (payload as { id: number; role: string }).role;
 
     next();
   });
